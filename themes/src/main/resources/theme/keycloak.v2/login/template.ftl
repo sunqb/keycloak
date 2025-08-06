@@ -88,6 +88,8 @@
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
     <script type="module">
+        alert('执行2')
+
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
 
         startSessionPolling(

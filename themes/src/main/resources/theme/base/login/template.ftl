@@ -44,6 +44,8 @@
         </#list>
     </#if>
     <script type="module">
+        alert('执行1')
+
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
 
         startSessionPolling(
