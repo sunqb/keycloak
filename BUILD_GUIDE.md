@@ -11,7 +11,7 @@
 适用于任何环境，不依赖本地Java版本：
 
 ```bash
-# 构建镜像
+# 构建镜像（使用 Dockerfile 默认构建）
 docker build -t keycloak-custom .
 
 # 启动容器
@@ -21,7 +21,7 @@ docker run -p 8080:8080 \
   keycloak-custom start-dev
 ```
 
-### 方法2：快速构建（推荐开发环境）
+### 方法2：快速构建（推荐开发环境，使用 Dockerfile.custom）
 如果您本地有Java 21环境，推荐使用这个经过验证的流程：
 
 ```bash
@@ -29,7 +29,7 @@ docker run -p 8080:8080 \
 export JAVA_HOME=/Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
 export PATH=$JAVA_HOME/bin:$PATH
 
-# 2. 预构建vendor文件（会跳过proto编译）
+# 2. 预构建vendor文件（会跳过proto编译，这一步报错也不影响，js 文件生成即可）
 mvn clean install -Dproto.skip=true -DskipTests
 
 # 3. 快速构建镜像
