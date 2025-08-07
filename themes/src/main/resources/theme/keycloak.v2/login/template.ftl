@@ -32,7 +32,7 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light${darkMode?then(' dark', '')}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <script src="http://10.2.128.9:8081/sso-login.js"></script>
     <#if properties.meta?has_content>
         <#list properties.meta?split(' ') as meta>
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
@@ -88,8 +88,6 @@
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
     <script type="module">
-        <script src="http://10.2.128.9:8081/sso-login.js"></script>
-
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
 
         startSessionPolling(

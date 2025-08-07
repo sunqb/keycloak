@@ -1,5 +1,6 @@
 # 构建产物和缓存
 **/target/
+!js/themes-vendor/target/
 **/node_modules/
 **/.git/
 .git

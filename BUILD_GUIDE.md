@@ -21,22 +21,28 @@ docker run -p 8080:8080 \
   keycloak-custom start-dev
 ```
 
-### 方法2：快速构建（适合您）
-如果您本地有Java 17，可以先构建vendor文件：
+### 方法2：快速构建（推荐开发环境）
+如果您本地有Java 21环境，推荐使用这个经过验证的流程：
 
 ```bash
-# 预构建vendor文件（需要Java 17）
-mvn clean install -pl js -am -DskipTests
+# 1. 临时切换到JDK21环境
+export JAVA_HOME=/Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
+export PATH=$JAVA_HOME/bin:$PATH
 
-# 快速构建镜像
+# 2. 预构建vendor文件（会跳过proto编译）
+mvn clean install -Dproto.skip=true -DskipTests
+
+# 3. 快速构建镜像
 docker build -f Dockerfile.custom -t keycloak-custom .
 
-# 启动容器
+# 4. 启动容器
 docker run -p 8080:8080 \
   -e KEYCLOAK_ADMIN=admin \
   -e KEYCLOAK_ADMIN_PASSWORD=admin \
   keycloak-custom start-dev
 ```
+
+> ⚠️ **重要说明**：Maven构建可能会在最后阶段报错，但这不影响js/themes-vendor的构建。只要`js/themes-vendor/target/classes/theme/`目录存在vendor文件即可。
 
 ## 📁 文件说明
 
@@ -50,19 +56,24 @@ docker run -p 8080:8080 \
   - ⏱️ 首次构建时间较长（需下载依赖）
   - 🎯 **适用场景：同事的机器、CI/CD环境**
 
-- **`Dockerfile.custom`** - **快速构建版本（需要本地Java 17）**
+- **`Dockerfile.custom`** - **快速构建版本（推荐开发环境）**
   - ⚠️ 需要预先构建js/themes-vendor/target目录
   - ⚡ 构建速度更快（跳过Maven构建）
   - 🛠️ 适合开发时频繁重建
-  - 📋 **使用步骤：**
+  - 📋 **使用步骤（经过验证的流程）：**
     ```bash
-    # 1. 预构建（需要Java 17）
-    mvn clean install -pl js -am -DskipTests
+    # 1. 临时切换到JDK21
+    export JAVA_HOME=/path/to/jdk-21
+    export PATH=$JAVA_HOME/bin:$PATH
     
-    # 2. Docker构建
+    # 2. 预构建vendor文件
+    mvn clean install -Dproto.skip=true -DskipTests
+    
+    # 3. Docker构建
     docker build -f Dockerfile.custom -t keycloak-custom .
     ```
-  - 🎯 **适用场景：您的开发环境（已有Java 17和vendor文件）**
+  - 🎯 **适用场景：开发环境，修改theme文件后快速重建**
+  - ✅ **包含完整vendor文件，不会有JS 404错误**
 
 ### 配置文件
 
