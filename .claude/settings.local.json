@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker build:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.keycloak.org)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  }
+}
