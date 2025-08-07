@@ -72,6 +72,117 @@ docker run -p 8080:8080 \
 ./push-image.sh -t v1.0 -p linux/amd64 your-username
 ```
 
+## 🎯 完整工作流程（从零开始）
+
+### 第一次使用完整流程
+
+```bash
+# 1. 确保环境准备
+# 检查Docker是否运行
+docker --version
+
+# 检查JDK21路径（根据实际路径调整）
+ls /Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
+
+# 2. 设置Java环境
+export JAVA_HOME=/Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
+export PATH=$JAVA_HOME/bin:$PATH
+java -version  # 验证版本为21.x
+
+# 3. 预构建vendor文件（必须步骤）
+mvn clean install -Dproto.skip=true -DskipTests
+# ⚠️ 这一步可能在最后proto阶段报错，但不影响vendor文件生成
+# ✅ 只要看到 js/themes-vendor/target/classes/theme/ 有文件即可
+
+# 4. 构建服务器兼容镜像
+./build.sh --auto
+# ✅ 构建成功后会显示镜像信息和架构（应为amd64）
+
+# 5. 推送到Docker Hub（可选）
+./push-image.sh your-dockerhub-username
+# 💡 首次会提示登录Docker Hub
+
+# 6. 启动测试（可选）
+docker run -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  keycloak-custom:latest start-dev
+```
+
+### 日常开发流程（修改theme后）
+
+```bash
+# 1. 快速重建（vendor文件已存在）
+./build.sh --auto
+
+# 2. 推送更新（如需要）
+./push-image.sh your-dockerhub-username
+```
+
+### 为不同平台构建
+
+```bash
+# Mac本地使用（ARM64）
+./build.sh --platform linux/arm64
+
+# 服务器使用（AMD64，推荐）
+./build.sh --auto
+# 等价于
+./build.sh --platform linux/amd64
+
+# 查看构建选项
+./build.sh --help
+```
+
+## ⚠️ 重要提醒
+
+### 必须先执行的步骤
+
+1. **JDK21环境设置**：
+   ```bash
+   export JAVA_HOME=/Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
+   export PATH=$JAVA_HOME/bin:$PATH
+   ```
+
+2. **Maven构建vendor文件**：
+   ```bash
+   mvn clean install -Dproto.skip=true -DskipTests
+   ```
+   - ✅ 成功标志：`js/themes-vendor/target/classes/theme/` 目录存在并包含React相关JS文件
+   - ⚠️ proto阶段可能超时报错，但不影响vendor文件生成
+
+3. **平台选择**：
+   - 服务器部署：**必须使用** `./build.sh --auto` 构建AMD64版本
+   - Mac本地测试：可以使用 `./build.sh` 构建ARM64版本
+
+### 常见错误和解决方案
+
+1. **"exec format error"**：
+   - 原因：在AMD64服务器运行了ARM64镜像
+   - 解决：重新用 `./build.sh --auto` 构建AMD64版本
+
+2. **"vendor文件不存在"**：
+   - 原因：没有运行Maven构建
+   - 解决：执行 `mvn clean install -Dproto.skip=true -DskipTests`
+
+3. **"Java版本错误"**：
+   - 原因：没有切换到JDK21
+   - 解决：重新设置JAVA_HOME环境变量
+
+4. **"Maven构建失败"**：
+   - 如果是proto阶段超时：可以忽略，继续Docker构建
+   - 如果是编译错误：检查JDK版本是否为21
+
+## 📝 文件用途快速参考
+
+| 文件 | 用途 | 何时使用 |
+|------|------|----------|
+| `build.sh` | 智能构建脚本 | ⭐ **主要使用** - 构建任何平台镜像 |
+| `push-image.sh` | 推送镜像到Hub | 需要分享镜像时 |
+| `Dockerfile.multi` | 多平台Dockerfile | build.sh自动调用 |
+| `Dockerfile` | 传统完整构建 | 特殊场景或老版本兼容 |
+| `Dockerfile.custom` | 传统快速构建 | 特殊场景或老版本兼容 |
+
 ### 配置文件
 
 - **`settings-china.xml`** - Maven配置文件
