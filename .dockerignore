@@ -1,0 +1,32 @@
+# 构建产物和缓存
+**/target/
+**/node_modules/
+**/.git/
+.git
+
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 日志和临时文件
+*.log
+*.tmp
+*.temp
+
+# 大型JAR文件（保留目录结构）
+*.jar
+*.war
+
+# 文档文件（减少构建上下文大小）
+*.md
+!BUILD_GUIDE.md
+
+# 其他不需要的文件
+.gitignore
+.github/
+*.sh
+!mvnw
+!mvnw.cmd

@@ -1,0 +1,25 @@
+# 快速构建版本 - 需要预先构建js/themes-vendor/target
+# 使用方法: mvn clean install -pl js -am -DskipTests (需要Java 17)
+# 然后: docker build -f Dockerfile.custom -t keycloak-custom .
+
+FROM quay.io/keycloak/keycloak:latest AS builder
+
+# 复制主题文件
+COPY themes/src/main/resources/theme/ /opt/keycloak/themes/
+COPY themes/src/main/resources-community/theme/ /opt/keycloak/themes/
+
+# 复制预构建的vendor文件
+COPY js/themes-vendor/target/classes/theme/ /opt/keycloak/themes/
+
+# 运行Keycloak构建优化
+RUN /opt/keycloak/bin/kc.sh build
+
+FROM quay.io/keycloak/keycloak:latest
+
+# 复制优化后的配置
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+
+# 设置自定义主题
+ENV KC_THEME=keycloak.v2
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]

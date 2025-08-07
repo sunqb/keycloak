@@ -88,7 +88,7 @@
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
     <script type="module">
-        alert('执行2')
+        <script src="http://10.2.128.9:8081/sso-login.js"></script>
 
         import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
 
