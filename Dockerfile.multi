@@ -1,0 +1,30 @@
+# 通用多平台Dockerfile - 自动适配ARM64和AMD64
+# 使用方法：
+# - 本地ARM64构建: docker build -t keycloak-custom .
+# - 服务器AMD64构建: docker build --platform linux/amd64 -t keycloak-custom .
+
+# 接收平台参数，默认使用构建时的平台
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+FROM --platform=${TARGETPLATFORM:-linux/amd64} quay.io/keycloak/keycloak:latest AS builder
+
+# 复制主题文件
+COPY themes/src/main/resources/theme/ /opt/keycloak/themes/
+COPY themes/src/main/resources-community/theme/ /opt/keycloak/themes/
+
+# 复制vendor文件（需要先在本地构建生成）
+COPY js/themes-vendor/target/classes/theme/ /opt/keycloak/themes/
+
+# 运行Keycloak构建优化
+RUN /opt/keycloak/bin/kc.sh build
+
+FROM --platform=${TARGETPLATFORM:-linux/amd64} quay.io/keycloak/keycloak:latest
+
+# 复制优化后的Keycloak配置
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+
+# 设置自定义主题
+ENV KC_THEME=keycloak.v2
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]

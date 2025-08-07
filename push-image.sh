@@ -9,6 +9,7 @@ set -e  # 遇到错误立即退出
 LOCAL_IMAGE="keycloak-custom"
 DEFAULT_USERNAME=""
 DEFAULT_TAG="latest"
+DEFAULT_PLATFORM="linux/amd64"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -48,6 +49,7 @@ Keycloak Custom Docker镜像推送脚本
 选项:
   -t, --tag TAG           指定镜像标签 (默认: latest)
   -i, --image IMAGE       指定本地镜像名称 (默认: keycloak-custom)
+  -p, --platform PLATFORM 指定目标平台 (默认: linux/amd64)
   -h, --help              显示此帮助信息
   --dry-run               模拟运行，只显示将要执行的命令
 
@@ -55,6 +57,7 @@ Keycloak Custom Docker镜像推送脚本
   ./push-image.sh your-username
   ./push-image.sh -t v1.0 your-username  
   ./push-image.sh --tag v1.0 your-username
+  ./push-image.sh -p linux/arm64 your-username
   ./push-image.sh --dry-run your-username
 
 EOF
@@ -105,6 +108,10 @@ parse_args() {
                 LOCAL_IMAGE="$2"
                 shift 2
                 ;;
+            -p|--platform)
+                PLATFORM="$2"
+                shift 2
+                ;;
             -h|--help)
                 show_help
                 exit 0
@@ -136,6 +143,7 @@ parse_args() {
 main() {
     # 默认值
     TAG="$DEFAULT_TAG"
+    PLATFORM="$DEFAULT_PLATFORM"
     DRY_RUN=false
     
     print_info "开始Keycloak Custom镜像推送流程..."
@@ -158,6 +166,7 @@ main() {
     echo "  远程镜像: $REMOTE_IMAGE"
     echo "  Docker Hub用户: $USERNAME"
     echo "  镜像标签: $TAG"
+    echo "  目标平台: $PLATFORM"
     echo ""
     
     if [[ "$DRY_RUN" == "true" ]]; then

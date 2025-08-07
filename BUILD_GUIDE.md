@@ -2,78 +2,75 @@
 
 ## 🚀 快速开始
 
-### 🎯 建议选择
+### 🎯 推荐构建方式
 
-- **同事/新环境** → 使用 `Dockerfile`（完整构建）
-- **您的开发环境** → 使用 `Dockerfile.custom`（快速构建）
-
-### 方法1：完整构建（推荐给同事）
-适用于任何环境，不依赖本地Java版本：
+使用通用多平台构建脚本，一键解决所有平台兼容性问题：
 
 ```bash
-# 构建镜像（使用 Dockerfile 默认构建）
-docker build -t keycloak-custom .
-
-# 启动容器
-docker run -p 8080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  keycloak-custom start-dev
-```
-
-### 方法2：快速构建（推荐开发环境，使用 Dockerfile.custom）
-如果您本地有Java 21环境，推荐使用这个经过验证的流程：
-
-```bash
-# 1. 临时切换到JDK21环境
+# 1. 临时切换到JDK21环境（预构建vendor文件）
 export JAVA_HOME=/Volumes/samsungssd/soft/jdk-21.0.8.jdk/Contents/Home
 export PATH=$JAVA_HOME/bin:$PATH
 
 # 2. 预构建vendor文件（会跳过proto编译，这一步报错也不影响，js 文件生成即可）
 mvn clean install -Dproto.skip=true -DskipTests
 
-# 3. 快速构建镜像
-docker build -f Dockerfile.custom -t keycloak-custom .
+# 3. 智能构建镜像
+./build.sh --auto              # 自动构建AMD64版本（服务器通用）
+# 或
+./build.sh --platform linux/arm64    # 指定ARM64平台（Mac本地）
+# 或  
+./build.sh                     # 使用当前平台
 
 # 4. 启动容器
 docker run -p 8080:8080 \
   -e KEYCLOAK_ADMIN=admin \
   -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  keycloak-custom start-dev
+  keycloak-custom:latest start-dev
 ```
 
-> ⚠️ **重要说明**：Maven构建可能会在最后阶段报错，但这不影响js/themes-vendor的构建。只要`js/themes-vendor/target/classes/theme/`目录存在vendor文件即可。
+### 📋 构建选项说明
 
-## 📁 文件说明
+**`build.sh`** 支持以下选项：
+- `--auto` - 自动构建AMD64版本（推荐，服务器通用）
+- `--platform linux/amd64` - 明确指定AMD64平台
+- `--platform linux/arm64` - 明确指定ARM64平台
+- `--tag v1.0` - 自定义镜像标签
+- `--help` - 显示完整帮助信息
 
-### Docker构建文件
+## 📁 构建文件说明
 
-- **`Dockerfile`** - **完整自动构建版本（推荐给同事使用）**
-  - ✅ 自动构建js模块生成vendor文件
-  - ✅ 使用阿里云Maven镜像加速下载
-  - ✅ **不依赖本地Java环境**
-  - ✅ 一条命令完成所有构建：`docker build -t keycloak-custom .`
-  - ⏱️ 首次构建时间较长（需下载依赖）
-  - 🎯 **适用场景：同事的机器、CI/CD环境**
+### 核心文件
 
-- **`Dockerfile.custom`** - **快速构建版本（推荐开发环境）**
-  - ⚠️ 需要预先构建js/themes-vendor/target目录
-  - ⚡ 构建速度更快（跳过Maven构建）
-  - 🛠️ 适合开发时频繁重建
-  - 📋 **使用步骤（经过验证的流程）：**
-    ```bash
-    # 1. 临时切换到JDK21
-    export JAVA_HOME=/path/to/jdk-21
-    export PATH=$JAVA_HOME/bin:$PATH
-    
-    # 2. 预构建vendor文件
-    mvn clean install -Dproto.skip=true -DskipTests
-    
-    # 3. Docker构建
-    docker build -f Dockerfile.custom -t keycloak-custom .
-    ```
-  - 🎯 **适用场景：开发环境，修改theme文件后快速重建**
-  - ✅ **包含完整vendor文件，不会有JS 404错误**
+- **`Dockerfile.multi`** - **通用多平台Dockerfile（推荐）**
+  - ✅ 单文件支持ARM64和AMD64
+  - ✅ 自动平台检测和适配
+  - ✅ 使用ARG实现平台灵活性
+
+- **`build.sh`** - **智能构建脚本（推荐）**
+  - ✅ 自动检测vendor文件
+  - ✅ 智能平台选择
+  - ✅ 完整的错误处理和提示
+  - ✅ 彩色输出和构建信息
+
+- **`push-image.sh`** - **镜像推送脚本**
+  - ✅ 支持多平台推送
+  - ✅ 自动Docker Hub登录
+  - ✅ 模拟运行模式
+
+### 传统构建文件（向下兼容）
+
+- **`Dockerfile`** - 完整构建版本（包含Maven构建）
+- **`Dockerfile.custom`** - 快速构建版本（需预构建vendor文件）
+
+## 🔧 镜像推送到Docker Hub
+
+```bash
+# 推送镜像到Docker Hub
+./push-image.sh your-dockerhub-username
+
+# 指定标签和平台
+./push-image.sh -t v1.0 -p linux/amd64 your-username
+```
 
 ### 配置文件
 
